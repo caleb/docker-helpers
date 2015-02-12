@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# read_link(output_prefix, link_name, default_port="", default_proto="tcp", required=true)
+# read_link(output_prefix, link_name, default_port="", default_proto="tcp", required=false)
 #
 # Looks for a linked container named `link_name` and
 # sets envrionment variables `output_prefix`_ADDR, `output_prefix`_PORT, and
@@ -35,15 +35,6 @@
 # If run with a link named `fpm` on port 8000 on 1.2.3.4 an error will be printed
 # and the script will exit with code 1.
 #
-function require_link {
-  output_prefix="${1}"
-  link_name="${2}"
-  default_port="${3:-""}"
-  default_proto="${4:-""}"
-
-  read_link "${output_prefix}" "${link_name}" "${default_port}" "${default_proto}" true
-}
-
 function read_link {
   output_prefix="${1}"
   link_name="${2}"
@@ -153,4 +144,18 @@ function read_link {
       exit 1
     fi
   fi
+}
+
+#
+# require_link(output_prefix, link_name, port, proto=tcp)
+#
+# require_link calls readlink with its parameters, but passes `true` for the `required` parameter
+#
+function require_link {
+  output_prefix="${1}"
+  link_name="${2}"
+  default_port="${3:-""}"
+  default_proto="${4:-""}"
+
+  read_link "${output_prefix}" "${link_name}" "${default_port}" "${default_proto}" true
 }
