@@ -3,7 +3,7 @@
 #
 # Automatically links based on environment variables with a common prefix. All
 # environment variables with the prefix "${prefix}_SYMLINK_" will be read as symlink
-# declarations, each having the form "<symlink from>:<symlink to>"
+# declarations, each having the form "<symlink from> -> <symlink to>"
 #
 # If prefix is empty, the prefix "SYMLINK_" will be used
 #
@@ -19,14 +19,28 @@
 #
 # with the environment:
 #
-#     NGINX_SYMLINK_1=/some/dir:/some/other/dir
-#     NGINX_SYMLINK_2=/some/dir2:/some/other/dir2
+#     NGINX_SYMLINK_1=/some/dir -> /some/other/dir
+#     NGINX_SYMLINK_2=/some/dir2 -> /some/other/dir2
 #
 # Symlinks will be created from
 #
 #    /some/dir to /some/other/dir
 #    /some/dir2 to /some/other/dir2
 #
+# If the link is created with a "fat arrow" (=>) the destination is removed first
+# with `rm -rf`
+#
+
+function trim() (
+  local string="${1}"
+
+  shopt -s extglob
+  string="${string##*([[:space:]])}"
+  string="${string%%*([[:space:]])}"
+
+  echo -n "${string}"
+)
+
 function auto_symlink {
   if [ -z "${1}" ]; then
     prefix="SYMLINK"
@@ -42,15 +56,30 @@ function auto_symlink {
   fi
 
   for var in $(compgen -v); do
-    if [[ "${var}" =~ ^${prefix}_.*$ ]]; then
+    if [[ "${var}" =~ ^${prefix}_(.*)$ ]]; then
+      link_suffix="${BASH_REMATCH[1]}"
       link="${!var}"
-      if [ -n "${link}" ]; then
-        from="${link%%:*}"
-        to="${link#*:}"
+
+      if [[ "${link}" =~ ^(.*)([=-]\>|:)(.*)$ ]]; then
+        from="${BASH_REMATCH[1]}"
+        to="${BASH_REMATCH[3]}"
+        arrow="${BASH_REMATCH[2]}"
+
+        from="$(trim "${from}")"
+        to="$(trim "${to}")"
+        arrow="$(trim "${arrow}")"
+
         if [ -z "${from}" ] || [ -z "${to}" ]; then
-          echo "A link must be in the form <from>:<to>"
+          echo "A link must be in the form \"<from> -> <to>\" or \"<from> => <to>\""
           exit 1
         else
+          if [ "${arrow}" = "=>" ]; then
+            rm -rf "${to}"
+          elif [ -e "${to}" ]; then
+            echo "The destination (${to}) already exists, remove it or use the fat arrow (=>) to automatically remove it when linked" >> out
+            exit 1
+          fi
+
           "${ln}" -f -s -n "${from}" "${to}"
         fi
       fi
