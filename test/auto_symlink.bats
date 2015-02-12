@@ -113,6 +113,18 @@ function teardown {
   [ "${status}" -ne 0 ]
 }
 
+@test "Errors out when a target exists already and the skinny arrow (:) is used" {
+  . ../helpers/auto_symlink.sh
+
+  mkdir -p "${__TMPDIR}/source"
+  mkdir -p "${__TMPDIR}/dest"
+
+  MY_SYMLINK_0="${__TMPDIR}/source : ${__TMPDIR}/dest"
+
+  run auto_symlink "MY" "${LN}"
+
+  [ "${status}" -ne 0 ]
+}
 
 @test "Destroys the target if it exists when using the fat arrow" {
   . ../helpers/auto_symlink.sh
@@ -121,6 +133,20 @@ function teardown {
   mkdir -p "${__TMPDIR}/dest"
 
   MY_SYMLINK_0="${__TMPDIR}/source => ${__TMPDIR}/dest"
+
+  run auto_symlink "MY" "${LN}"
+
+  [ "${status}" -eq 0 ]
+  [ -L "${__TMPDIR}/dest" ]
+}
+
+@test "Destroys the target if it exists when using the double colons" {
+  . ../helpers/auto_symlink.sh
+
+  mkdir -p "${__TMPDIR}/source"
+  mkdir -p "${__TMPDIR}/dest"
+
+  MY_SYMLINK_0="${__TMPDIR}/source :: ${__TMPDIR}/dest"
 
   run auto_symlink "MY" "${LN}"
 

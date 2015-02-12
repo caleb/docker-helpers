@@ -50,6 +50,12 @@ function auto_symlink {
 
   ln="${2:-ln}"
 
+  if [ -n "$(which gsed)" ]; then
+    sed="gsed"
+  else
+    sed="sed"
+  fi
+
   # if a "default link is given, give it a name under the prefix"
   if [ -n "${!prefix}" ]; then
     export "${prefix}__DEFAULT__"="${!prefix}"
@@ -59,6 +65,9 @@ function auto_symlink {
     if [[ "${var}" =~ ^${prefix}_(.*)$ ]]; then
       link_suffix="${BASH_REMATCH[1]}"
       link="${!var}"
+
+      # Replace the double colons with a fat arrow
+      link="$(echo "${link}" | "${sed}" -E -e 's/::(\s*\/)/=>\1/')"
 
       if [[ "${link}" =~ ^(.*)([=-]\>|:)(.*)$ ]]; then
         from="${BASH_REMATCH[1]}"
@@ -73,10 +82,10 @@ function auto_symlink {
           echo "A link must be in the form \"<from> -> <to>\" or \"<from> => <to>\""
           exit 1
         else
-          if [ "${arrow}" = "=>" ]; then
+          if [ "${arrow}" = "=>" ] || [ "${arrow}" = "::" ]; then
             rm -rf "${to}"
           elif [ -e "${to}" ]; then
-            echo "The destination (${to}) already exists, remove it or use the fat arrow (=>) to automatically remove it when linked" >&2
+            echo "The destination (${to}) already exists, remove it or use the fat arrow (=>) or double colons (::) to automatically remove it when linked" >&2
             exit 1
           fi
 
