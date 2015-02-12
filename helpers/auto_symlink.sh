@@ -51,7 +51,7 @@ function auto_symlink {
           echo "A link must be in the form <from>:<to>"
           exit 1
         else
-          "${ln}" -f -s -T "${from}" "${to}"
+          "${ln}" -f -s -n "${from}" "${to}"
         fi
       fi
     fi
