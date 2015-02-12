@@ -76,7 +76,7 @@ function auto_symlink {
           if [ "${arrow}" = "=>" ]; then
             rm -rf "${to}"
           elif [ -e "${to}" ]; then
-            echo "The destination (${to}) already exists, remove it or use the fat arrow (=>) to automatically remove it when linked" >> out
+            echo "The destination (${to}) already exists, remove it or use the fat arrow (=>) to automatically remove it when linked" >&2
             exit 1
           fi
 
