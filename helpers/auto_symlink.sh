@@ -68,8 +68,10 @@ function auto_symlink {
 
       # Replace the double colons with a fat arrow
       link="$(echo "${link}" | "${sed}" -E -e 's/::(\s*\/)/=>\1/')"
+      # Replace the single colon with a skinny arrow
+      link="$(echo "${link}" | "${sed}" -E -e 's/:(\s*\/)/->\1/')"
 
-      if [[ "${link}" =~ ^(.*)([=-]\>|:)(.*)$ ]]; then
+      if [[ "${link}" =~ ^(.*)([=-]\>)(.*)$ ]]; then
         from="${BASH_REMATCH[1]}"
         to="${BASH_REMATCH[3]}"
         arrow="${BASH_REMATCH[2]}"
@@ -82,7 +84,7 @@ function auto_symlink {
           echo "A link must be in the form \"<from> -> <to>\" or \"<from> => <to>\""
           exit 1
         else
-          if [ "${arrow}" = "=>" ] || [ "${arrow}" = "::" ]; then
+          if [ "${arrow}" = "=>" ]; then
             rm -rf "${to}"
           elif [ -e "${to}" ]; then
             echo "The destination (${to}) already exists, remove it or use the fat arrow (=>) or double colons (::) to automatically remove it when linked" >&2
