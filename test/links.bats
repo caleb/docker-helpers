@@ -81,6 +81,38 @@
   [ "${PHP_FPM_PROTO}" = "tcp" ]
 }
 
+@test "Detects a link based on port when the link name is not found" {
+  . ../helpers/links.sh
+
+  # This triggers that the link is present
+  PHP_NAME=test/php-fpm
+  PHP_PORT_9000_TCP=tcp://1.2.3.4:9000
+  PHP_PORT=tcp://1.2.3.4:8000
+
+  read_link OUT does-not-exist-php-fpm 9000 tcp
+
+  [ "${OUT_ADDR}" = "1.2.3.4" ]
+  [ "${OUT_PORT}" = "9000" ]
+  [ "${OUT_PROTO}" = "tcp" ]
+}
+
+@test "Detects a link based on an overridden port when the link name is not found" {
+  . ../helpers/links.sh
+
+  # This triggers that the link is present
+  PHP_NAME=test/php-fpm
+  PHP_PORT_7000_TCP=tcp://1.2.3.4:7000
+  PHP_PORT=tcp://1.2.3.4:8000
+
+  OUT_PORT=7000
+
+  read_link OUT does-not-exist-php-fpm 9000 tcp
+
+  [ "${OUT_ADDR}" = "1.2.3.4" ]
+  [ "${OUT_PORT}" = "7000" ]
+  [ "${OUT_PROTO}" = "tcp" ]
+}
+
 @test "Output prefix is the same as the link name with an overridden port that is not published" {
   . ../helpers/links.sh
 
@@ -102,7 +134,7 @@
 
   # This triggers that the link is present
   PHP_FPM_NAME=test/php-fpm
-  PHP_FPM_PORT_7000_TCP=tcp://1.2.3.4:8000
+  PHP_FPM_PORT_7000_TCP=tcp://1.2.3.4:7000
   PHP_FPM_PORT=tcp://1.2.3.4:8000
 
   # The user overridden port
@@ -115,4 +147,43 @@
   [ "${PHP_FPM_ADDR}" = "2.3.4.5" ]
   [ "${PHP_FPM_PORT}" = "2222" ]
   [ "${PHP_FPM_PROTO}" = "udp" ]
+}
+
+@test "Doesn't error out when a required link doesn't publish a port and the user doesn't specify a port" {
+  . ../helpers/links.sh
+
+  # This triggers that the link is present
+  PHP_FPM_NAME=test/php-fpm
+
+  run require_link PHP_FPM php-fpm
+
+  [ "${status}" -eq 0 ]
+}
+
+@test "Exports linked environment variables" {
+  . ../helpers/links.sh
+
+  # This triggers that the link is present
+  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_ENV_SOME_VAR="some val"
+  PHP_FPM_ENV_ANOTHER_VAR="another val"
+
+  read_link MY_PREFIX php-fpm
+
+  [ "${MY_PREFIX_ENV_SOME_VAR}" = "some val" ]
+  [ "${MY_PREFIX_ENV_ANOTHER_VAR}" = "another val" ]
+}
+
+@test "Exports linked environment variables when output prefix clobbers the link name" {
+  . ../helpers/links.sh
+
+  # This triggers that the link is present
+  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_ENV_SOME_VAR="some val"
+  PHP_FPM_ENV_ANOTHER_VAR="another val"
+
+  read_link PHP_FPM php-fpm
+
+  [ "${PHP_FPM_ENV_SOME_VAR}" = "some val" ]
+  [ "${PHP_FPM_ENV_ANOTHER_VAR}" = "another val" ]
 }
