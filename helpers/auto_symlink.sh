@@ -34,7 +34,7 @@ function auto_symlink {
     prefix="${1}_SYMLINK"
   fi
 
-  ln="${2:ln}"
+  ln="${2:-ln}"
 
   # if a "default link is given, give it a name under the prefix"
   if [ -n "${!prefix}" ]; then
