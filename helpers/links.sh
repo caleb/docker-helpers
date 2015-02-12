@@ -56,26 +56,46 @@ function read_link {
   env_link_name="${env_link_name//-/_}"
 
   addr_var="${output_prefix}_ADDR"
-
   port_var="${output_prefix}_PORT"
   proto_var="${output_prefix}_PROTO"
 
-  function export_if_not_set {
+  # If the PORT variable clashes with docker's default *_PORT, detect if the user
+  # overrode it
+  clobbers_docker_port_env=false
+  if [ "${port_var}" = "${env_link_name}_PORT" ]; then
+    clobbers_docker_port_env=true
+  fi
+
+  function export_var {
     var="${1}"
     value="${2}"
+    clobber="${3:-false}"
 
-    if [ -z "${!var}" ]; then
+    if [ $clobber = true ] || [ -z "${!var}" ]; then
       eval "export ${var}=\"${value}\""
     fi
   }
 
   # set the default port to the port specified by the user, if there is one
-  if [ -z "${default_port}" ] && [ -n "${!port_var}" ]; then
-    default_port="${!port_var}"
+  if [ -n "${!port_var}" ]; then
+    if [[ "${!port_var}" =~ ^[0-9]+$ ]]; then
+      default_port="${!port_var}"
+    elif [ $clobbers_docker_port_env = false ]; then
+      # if we aren't clobbering the docker port variable (and thus it /should/ be
+      # populated with somethin other than a numerb e.g. tcp://1.2.3.4:1234) make sure
+      # the port is a number
+      echo "You specified a port (via ${port_var}=${!port_var}) that is not a number" >&2
+      exit 1
+        elif [[ $clobbers_docker_port_env = true ]] && [[ ! "${!port_var}" =~ ^[^:]+://[^:]+:[0-9]+$ ]]; then
+      # If we are clobbering the docker port variable, raise an error if it was set
+      # to somethign besides the standard docker format
+      echo "You specified a port (via ${port_var}=${!port_var}) that is not a number" >&2
+      exit 1
+    fi
   fi
 
   # set the default protocol to the protocol specified by the user, if there is one
-  if [ -z "${default_proto}" ] && [ -n "${!proto_var}" ]; then
+  if [ -n "${!proto_var}" ]; then
     default_proto="${!proto_var}"
   elif [ -z "${default_proto}" ]; then
     # Just use tcp if the user hasn't specified a manual protocol
@@ -85,9 +105,9 @@ function read_link {
   # If the user specified an address, use that
   if [ -n "${!addr_var}" ]; then
     # if a port is set, leave it be, else set it to the default port
-    export_if_not_set "${port_var}" "${default_port}"
+    export_var "${port_var}" "${default_port}"
     # if a proto is set, leave it be, else set it to the default proto
-    export_if_not_set "${proto_var}" "${default_proto}"
+    export_var "${proto_var}" "${default_proto}" $clobbers_docker_port_env
 
     return
   fi
@@ -106,10 +126,10 @@ function read_link {
       addr="${addr%:*}"
       port="${link_port_value##*:}"
 
-      export_if_not_set "${addr_var}" "${addr}"
-      export_if_not_set "${port_var}" "${port}"
-      export_if_not_set "${proto_var}" "${proto}"
-    elif [ -n "${!link_first_addr_var}" ]; then
+      export_var "${addr_var}" "${addr}"
+      export_var "${port_var}" "${port}" $clobbers_docker_port_env
+      export_var "${proto_var}" "${proto}"
+    elif [ $clobbers_docker_port_env = false ] && [ -n "${!link_first_addr_var}" ]; then
       link_first_addr_value="${!link_first_addr_var}"
       # If the link exists, but the default port was not found, check to see the first port that was exposed
       proto="${link_first_addr_value%%://*}"
@@ -117,16 +137,19 @@ function read_link {
       addr="${addr%:*}"
       port="${link_first_addr_value##*:}"
 
-      export_if_not_set "${addr_var}" "${addr}"
-      export_if_not_set "${port_var}" "${port}"
-      export_if_not_set "${proto_var}" "${proto}"
+      export_var "${addr_var}" "${addr}"
+      export_var "${port_var}" "${port}" $clobbers_docker_port_env
+      export_var "${proto_var}" "${proto}"
+    else
+      echo "The port ${default_port} isn't exported by the container '${link_name}' on the ${default_proto} protocol" >&2
+      exit 1
     fi
   fi
 
   # if we require this link, print an error and exit if all the properties aren't set
   if [ "${required}" = "true" ] || [ "${required}" = "yes" ]; then
     if [ -z "${!addr_var}" ] || [ -z "${!port_var}" ] || [ -z "${!proto_var}" ]; then
-      echo "You must specify a link named ${link_name} running at port ${default_port} or specify the variables ${output_prefix}_ADDR (and optionally ${output_prefix}_PORT and ${output_prefix}_PROTO)"
+      echo "You must specify a link named ${link_name} running at port ${default_port} or specify the variables ${output_prefix}_ADDR (and optionally ${output_prefix}_PORT and ${output_prefix}_PROTO)" >&2
       exit 1
     fi
   fi
