@@ -21,11 +21,15 @@
 #
 #     NGINX_SYMLINK_1=/some/dir -> /some/other/dir
 #     NGINX_SYMLINK_2=/some/dir2 -> /some/other/dir2
+#     NGINX_SYMLINK_3=/some/dir3 => /some/other/dir3
+#     NGINX_SYMLINK_4=/some/somthign -> /some/other/dir4/
 #
 # Symlinks will be created from
 #
 #    /some/dir to /some/other/dir
 #    /some/dir2 to /some/other/dir2
+#    /some/dir3 to /some/other/dir3 (because the fat arrow was used above, the destionation is removed before linking)
+#    /some/dir3 to /some/other/dir4/somethign (Creates `something` inside the dir4 because dir4 ended in a slash above )
 #
 # If the link is created with a "fat arrow" (=>) the destination is removed first
 # with `rm -rf`
