@@ -229,6 +229,23 @@ function teardown {
   [ "$(readlink "${__TMPDIR}/dest")" = "${__TMPDIR}/source2" ]
 }
 
+@test "Running with a prefix more than once has no effect. (e.g. Running prefix ONE then TWO then ONE results in the links of TWO)" {
+  . ../helpers/auto_symlink.sh
+
+  mkdir -p "${__TMPDIR}/source"
+  mkdir -p "${__TMPDIR}/source2"
+
+  MY_SYMLINK_0="${__TMPDIR}/source  :  ${__TMPDIR}/dest"
+  MY2_SYMLINK_0="${__TMPDIR}/source2  :  ${__TMPDIR}/dest"
+
+  auto_symlink "MY" "${LN}"
+  auto_symlink "MY2" "${LN}"
+  auto_symlink "MY" "${LN}"
+
+  [ -L "${__TMPDIR}/dest" ]
+  [ "$(readlink "${__TMPDIR}/dest")" = "${__TMPDIR}/source2" ]
+}
+
 @test "Allow the destination to end in a slash to create a link inside a directory even when that directory is a symlink" {
   . ../helpers/auto_symlink.sh
 

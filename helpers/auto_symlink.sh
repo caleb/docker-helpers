@@ -80,6 +80,9 @@ function auto_symlink {
         to="$(trim "${to}")"
         arrow="$(trim "${arrow}")"
 
+        # Unset the link so it doesn't get processed more than once
+        unset -v "${var}"
+
         if [ -z "${from}" ] || [ -z "${to}" ]; then
           echo "A link must be in the form \"<from> -> <to>\" or \"<from> => <to>\""
           exit 1
