@@ -88,12 +88,14 @@
   PHP_NAME=test/php-fpm
   PHP_PORT_9000_TCP=tcp://1.2.3.4:9000
   PHP_PORT=tcp://1.2.3.4:8000
+  PHP_ENV_MY_ENVIRONMENT_VARIABLE=ohhai
 
   read_link OUT does-not-exist-php-fpm 9000 tcp
 
   [ "${OUT_ADDR}" = "1.2.3.4" ]
   [ "${OUT_PORT}" = "9000" ]
   [ "${OUT_PROTO}" = "tcp" ]
+  [ "${OUT_ENV_MY_ENVIRONMENT_VARIABLE}" = "ohhai" ]
 }
 
 @test "Detects a link based on an overridden port when the link name is not found" {
@@ -103,6 +105,7 @@
   PHP_NAME=test/php-fpm
   PHP_PORT_7000_TCP=tcp://1.2.3.4:7000
   PHP_PORT=tcp://1.2.3.4:8000
+  PHP_ENV_MY_ENVIRONMENT_VARIABLE=ohhai
 
   OUT_PORT=7000
 
@@ -111,6 +114,7 @@
   [ "${OUT_ADDR}" = "1.2.3.4" ]
   [ "${OUT_PORT}" = "7000" ]
   [ "${OUT_PROTO}" = "tcp" ]
+  [ "${OUT_ENV_MY_ENVIRONMENT_VARIABLE}" = "ohhai" ]
 }
 
 @test "Output prefix is the same as the link name with an overridden port that is not published" {

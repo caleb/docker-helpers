@@ -141,24 +141,16 @@ function read_link {
       exit 1
     fi
 
-    #
-    # Set up the environment variables
-    #
-    env_prefix="${env_link_name}_ENV_"
-    env_output_prefix="${output_prefix}_ENV_"
-    eval "
-for var in \${!${env_prefix}*}; do
-  var_name=\"\${var/${env_prefix}/}\"
-  export ${env_output_prefix}\${var_name}=\"\${!var}\"
-done
-"
+
   else
     #
     # Try to sniff the link based on the port and protocol given
     #
     if [ -n "${default_port}" ] && [ -n "${default_proto}" ]; then
       for var in $(compgen -v); do
-        if [[ "${var}" =~ ^[A-Z0-9_]+_PORT_${default_port}_${default_proto^^}$ ]]; then
+        if [[ "${var}" =~ ^([A-Z0-9_]+)_PORT_${default_port}_${default_proto^^}$ ]]; then
+          # Since we sniffed the link, set the link_name so we can set up the environment later
+          env_link_name="${BASH_REMATCH[1]}"
           export_port "${!var}" $clobbers_docker_port_env
         fi
       done
@@ -178,6 +170,18 @@ done
       fi
     fi
   fi
+
+  #
+  # Set up the environment variables
+  #
+  env_prefix="${env_link_name}_ENV_"
+  env_output_prefix="${output_prefix}_ENV_"
+  eval "
+for var in \${!${env_prefix}*}; do
+  var_name=\"\${var/${env_prefix}/}\"
+  export ${env_output_prefix}\${var_name}=\"\${!var}\"
+done
+"
 }
 
 #
