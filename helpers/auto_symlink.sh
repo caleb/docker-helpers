@@ -30,7 +30,9 @@
 # If the link is created with a "fat arrow" (=>) the destination is removed first
 # with `rm -rf`
 #
-
+# After processing the environment variables, they are unset to avoid re-processing
+# if auto_symlink is run again
+#
 function trim() (
   local string="${1}"
 
