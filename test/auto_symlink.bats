@@ -179,3 +179,70 @@ function teardown {
   [ "${status}" -eq 0 ]
   [ -L "${__TMPDIR}/dest" ]
 }
+
+@test "If the destination ends in a slash, create the link inside the directory" {
+  . ../helpers/auto_symlink.sh
+
+  mkdir -p "${__TMPDIR}/source"
+  mkdir -p "${__TMPDIR}/dest"
+
+  MY_SYMLINK_0="${__TMPDIR}/source  :  ${__TMPDIR}/dest/"
+
+  run auto_symlink "MY" "${LN}"
+
+  [ "${status}" -eq 0 ]
+  [ -L "${__TMPDIR}/dest/source" ]
+}
+
+@test "Running twice with the same prefix is safe" {
+  . ../helpers/auto_symlink.sh
+
+  mkdir -p "${__TMPDIR}/source"
+
+  MY_SYMLINK_0="${__TMPDIR}/source  :  ${__TMPDIR}/dest"
+
+  run auto_symlink "MY" "${LN}"
+
+  [ "${status}" -eq 0 ]
+  [ -L "${__TMPDIR}/dest" ]
+
+  run auto_symlink "MY" "${LN}"
+
+  [ "${status}" -eq 0 ]
+  [ -L "${__TMPDIR}/dest" ]
+}
+
+@test "Running twice with a common dest but different sources results in a link pointing to the last run link" {
+  . ../helpers/auto_symlink.sh
+
+  mkdir -p "${__TMPDIR}/source"
+  mkdir -p "${__TMPDIR}/source2"
+
+  MY_SYMLINK_0="${__TMPDIR}/source  :  ${__TMPDIR}/dest"
+  MY2_SYMLINK_0="${__TMPDIR}/source2  :  ${__TMPDIR}/dest"
+
+  run auto_symlink "MY" "${LN}"
+  run auto_symlink "MY2" "${LN}"
+
+  [ "${status}" -eq 0 ]
+  [ -L "${__TMPDIR}/dest" ]
+  [ "$(readlink "${__TMPDIR}/dest")" = "${__TMPDIR}/source2" ]
+}
+
+@test "Allow the destination to end in a slash to create a link inside a directory even when that directory is a symlink" {
+  . ../helpers/auto_symlink.sh
+
+  mkdir -p "${__TMPDIR}/source"
+
+  MY_SYMLINK_0="${__TMPDIR}/source  :  ${__TMPDIR}/dest"
+  MY2_SYMLINK_0="${__TMPDIR}/source2  :  ${__TMPDIR}/dest/"
+
+  run auto_symlink "MY" "${LN}"
+  run auto_symlink "MY2" "${LN}"
+
+  [ "${status}" -eq 0 ]
+  [ -L "${__TMPDIR}/dest" ]
+  [ -L "${__TMPDIR}/dest/source2" ]
+  [ "$(readlink "${__TMPDIR}/dest")" = "${__TMPDIR}/source" ]
+  [ "$(readlink "${__TMPDIR}/dest/source2")" = "${__TMPDIR}/source2" ]
+}

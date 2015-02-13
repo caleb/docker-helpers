@@ -84,14 +84,42 @@ function auto_symlink {
           echo "A link must be in the form \"<from> -> <to>\" or \"<from> => <to>\""
           exit 1
         else
-          if [ "${arrow}" = "=>" ]; then
-            rm -rf "${to}"
-          elif [ -e "${to}" ]; then
-            echo "The destination (${to}) already exists, remove it or use the fat arrow (=>) or double colons (::) to automatically remove it when linked" >&2
-            exit 1
+          # if the link is the same, don't bother linking (this allows multiple runs
+          # with the same prefix)
+          if [ "$(readlink "${to}")" = "${from}" ]; then
+            return
           fi
 
-          "${ln}" -f -s -n "${from}" "${to}"
+          if [ "${arrow}" = "=>" ]; then
+            if [ -d "${to}" ]; then
+              rm -r "${to}"
+            else
+              rm "${to}"
+            fi
+          fi
+
+          # If the target exists already, and is not a symlink, potentially raise an error
+          if [ -e "${to}" ] && [ ! -L "${to}"  ]; then
+            if [ -d "${to}" ] && [[ "${to}" =~ /$ ]]; then
+              # The target is a directory and ends in a slash so make the link INSIDE
+              # the directory
+              : noop
+            else
+              echo "The destination (${to}) already exists, remove it or use the
+ fat arrow (=>) or double colons (::) to automatically remove it when linked" >&2
+              exit 1
+            fi
+          fi
+
+          # If we are here that means that the target doesn't exist, is a symlink, or
+          # the target ends in a slash and is a directory, in which case we will create a link
+          # inside of the directory.
+          if [[ "${to}" =~ /$ ]] && ([ -d "${to}" ] || [ -d "$(readlink "${to}")" ]); then
+            "${ln}" -s "${from}" "${to}"
+          else
+            # Create the link, overwriting the target if it exists and is a symlink (-f -n)
+            "${ln}" -f -s -n "${from}" "${to}"
+          fi
         fi
       fi
     fi
