@@ -5,7 +5,10 @@
 # the /var/run/rsyslog/log.sock socket to /dev/log where everything expects it to be
 #
 function link_rsyslog {
-  if [ -d /var/run/rsyslog ]; then
-    ln -sf /var/run/rsyslog/log.sock /dev/log
+  source="${1:-/var/run/rsyslog/log.sock}"
+  dest_prefix="${2:-}"
+
+  if [ -d "$(dirname "${source}")" ]; then
+    ln -sf "${source}" "${dest_prefix}"/dev/log
   fi
 }

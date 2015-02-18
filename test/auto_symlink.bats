@@ -2,7 +2,7 @@
 
 function setup {
   mkdir -p "${BATS_TMPDIR}/auto_link"
-  __TMPDIR="${BATS_TMPDIR}/auto_link}"
+  __TMPDIR="${BATS_TMPDIR}/auto_link"
 
   # Make sure we are using gnu ln because we need the -T flag
   if [ -n "$(which gln)" ]; then
