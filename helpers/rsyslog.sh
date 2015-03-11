@@ -12,3 +12,12 @@ function link_rsyslog {
     ln -sf "${source}" "${dest_prefix}"/dev/log
   fi
 }
+
+function has_rsyslog {
+  # if /dev/log.sock exists and is a socket or a symlink that points to a socket
+  if [ -S /dev/log.sock ] || [ -S "$(readlink /dev/log.sock)" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
