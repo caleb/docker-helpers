@@ -15,7 +15,9 @@ function link_rsyslog {
 
 function has_rsyslog {
   # if /dev/log.sock exists and is a socket or a symlink that points to a socket
-  if [ -S /dev/log.sock ] || [ -S "$(readlink /dev/log.sock)" ]; then
+  if [ -S /dev/log ]; then
+    return 0
+  elif [ -L /dev/log ] && [ -S "$(readlink /dev/log)" ]; then
     return 0
   else
     return 1
