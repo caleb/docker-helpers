@@ -29,7 +29,7 @@
 #    /some/dir to /some/other/dir
 #    /some/dir2 to /some/other/dir2
 #    /some/dir3 to /some/other/dir3 (because the fat arrow was used above, the destionation is removed before linking)
-#    /some/dir3 to /some/other/dir4/somethign (Creates `something` inside the dir4 because dir4 ended in a slash above )
+#    /some/dir3 to /some/other/dir4/something (Creates `something` inside the dir4 because dir4 ended in a slash above )
 #
 # If the link is created with a "fat arrow" (=>) the destination is removed first
 # with `rm -rf`
