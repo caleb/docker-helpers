@@ -22,7 +22,7 @@
 #     NGINX_SYMLINK_1=/some/dir -> /some/other/dir
 #     NGINX_SYMLINK_2=/some/dir2 -> /some/other/dir2
 #     NGINX_SYMLINK_3=/some/dir3 => /some/other/dir3
-#     NGINX_SYMLINK_4=/some/somthign -> /some/other/dir4/
+#     NGINX_SYMLINK_4=/some/somthing -> /some/other/dir4/
 #
 # Symlinks will be created from
 #
