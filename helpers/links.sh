@@ -89,6 +89,9 @@ function read_link {
   # set the default port to the port specified by the user, if there is one
   if [ -n "${!port_var}" ]; then
     if [[ "${!port_var}" =~ ^[0-9]+$ ]]; then
+      # Mark that the user specified a port via the PREFIX_PORT environment variable
+      # If this port is not found in the linked container, we want to throw an error
+      manually_specified_port=yes
       default_port="${!port_var}"
     elif [ $clobbers_docker_port_env = false ]; then
       # if we aren't clobbering the docker port variable (and thus it /should/ be
@@ -133,15 +136,13 @@ function read_link {
     link_port_value="${!link_port_var}"
     if [ -n "${link_port_value}" ]; then
       export_port "${link_port_value}" $clobbers_docker_port_env
-    elif [ -z "${default_port}" ] && [ -n "${!link_first_addr_var}" ]; then
-      # If we aren't looking for a specific port (default_port), then use the first exported port
-      # from the linked container
-      link_first_addr_value="${!link_first_addr_var}"
-      # If the link exists, but the default port was not found, check to see the first port that was exposed
-      export_port "${link_first_addr_value}" $clobbers_docker_port_env
-    elif [ -n "${default_port}" ]; then
+    elif [ -n "${default_port}" ] && [ -n "${manually_specified_port}" ]; then
       echo "The port ${default_port} isn't published by the container '${link_name}' on the ${default_proto} protocol" >&2
       exit 1
+    elif [ -n "${!link_first_addr_var}" ]; then
+      # Use the first port exposed by docker
+      link_first_addr_value="${!link_first_addr_var}"
+      export_port "${link_first_addr_value}" $clobbers_docker_port_env
     fi
   else
     #
