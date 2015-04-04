@@ -48,6 +48,21 @@
   [ "${TEST_PROTO}" = "tcp" ]
 }
 
+@test "Output prefix is the same as the link name without a default port or proto" {
+  . ../helpers/links.sh
+
+  # This triggers that the link is present
+  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_PORT_9000_TCP=tcp://1.2.3.4:9000
+  PHP_FPM_PORT=tcp://1.2.3.4:9000
+
+  read_link PHP_FPM php-fpm
+
+  [ "${PHP_FPM_ADDR}" = "1.2.3.4" ]
+  [ "${PHP_FPM_PORT}" = "9000" ]
+  [ "${PHP_FPM_PROTO}" = "tcp" ]
+}
+
 @test "Output prefix is the same as the link name" {
   . ../helpers/links.sh
 
