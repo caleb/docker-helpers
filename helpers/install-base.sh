@@ -13,6 +13,7 @@ rm -rf /var/lib/apt/lists/*
 # Install mo, the bash mustache templating engine
 #
 curl https://raw.githubusercontent.com/caleb/mo/master/mo > /usr/local/bin/mo
+chmod +x /usr/local/bin/mo
 
 #
 # Install syslog_forwarder
