@@ -101,9 +101,9 @@ function auto_symlink {
 
           if [ "${arrow}" = "=>" ]; then
             if [ -d "${to}" ]; then
-              rm -r "${to}"
+              rm -rf "${to}"
             else
-              rm "${to}"
+              rm -f "${to}"
             fi
           fi
 

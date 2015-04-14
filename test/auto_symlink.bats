@@ -154,6 +154,19 @@ function teardown {
   [ -L "${__TMPDIR}/dest" ]
 }
 
+@test "Fat arrow works when the destination does NOT exist" {
+  . ../helpers/auto_symlink.sh
+
+  mkdir -p "${__TMPDIR}/source"
+
+  MY_SYMLINK_0="${__TMPDIR}/source => ${__TMPDIR}/dest"
+
+  run auto_symlink "MY" "${LN}"
+
+  [ "${status}" -eq 0 ]
+  [ -L "${__TMPDIR}/dest" ]
+}
+
 @test "Colons work as separators too" {
   . ../helpers/auto_symlink.sh
 
