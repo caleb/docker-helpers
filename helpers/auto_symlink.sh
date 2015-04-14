@@ -100,10 +100,13 @@ function auto_symlink {
           fi
 
           if [ "${arrow}" = "=>" ]; then
-            if [ -d "${to}" ]; then
-              rm -rf "${to}"
-            else
-              rm -f "${to}"
+            # If the destination exists, remove it
+            if [ -e "${to}" ]; then
+              if [ -d "${to}" ]; then
+                rm -r "${to}"
+              else
+                rm "${to}"
+              fi
             fi
           fi
 
