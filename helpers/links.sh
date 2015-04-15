@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# read_link(output_prefix, link_name, default_port="", default_proto="tcp", required=false)
+# read-link(output_prefix, link_name, default_port="", default_proto="tcp", required=false)
 #
 # Looks for a linked container named `link_name` and
 # sets envrionment variables `output_prefix`_ADDR, `output_prefix`_PORT, and
@@ -21,7 +21,7 @@
 #
 # In a container with the link `php-fpm` with a published port 8000 on ip 1.2.3.4:
 #
-#    read_link NGINX_PHP_FPM php-fpm 9000 tcp
+#    read-link NGINX_PHP_FPM php-fpm 9000 tcp
 #
 # will result in:
 #
@@ -40,7 +40,7 @@
 # If run with a link named `fpm` on port 8000 on 1.2.3.4 an error will be printed
 # and the script will exit with code 1.
 #
-function read_link {
+function read-link {
   output_prefix="${1}"
   link_name="${2}"
   default_port="${3:-""}"
@@ -187,15 +187,15 @@ done
 }
 
 #
-# require_link(output_prefix, link_name, port, proto=tcp)
+# require-link(output_prefix, link_name, port, proto=tcp)
 #
-# require_link calls readlink with its parameters, but passes `true` for the `required` parameter
+# require-link calls readlink with its parameters, but passes `true` for the `required` parameter
 #
-function require_link {
+function require-link {
   output_prefix="${1}"
   link_name="${2}"
   default_port="${3:-""}"
   default_proto="${4:-""}"
 
-  read_link "${output_prefix}" "${link_name}" "${default_port}" "${default_proto}" true
+  read-link "${output_prefix}" "${link_name}" "${default_port}" "${default_proto}" true
 }

@@ -23,7 +23,7 @@ function teardown {
   mkdir -p "${__TMPDIR}/dev"
   touch "${__TMPDIR}/log.sock"
 
-  link_rsyslog "${__TMPDIR}/log.sock" "${__TMPDIR}"
+  link-rsyslog "${__TMPDIR}/log.sock" "${__TMPDIR}"
 
   [ -L "${__TMPDIR}/dev/log" ]
   [ "$(readlink "${__TMPDIR}/dev/log")" = "${__TMPDIR}/log.sock" ]

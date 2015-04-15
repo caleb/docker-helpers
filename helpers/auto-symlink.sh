@@ -11,11 +11,11 @@
 # point to your GNU ln... this is generally only needed for running tests on
 # a non-Linux machine.
 #
-# auto_symlink(prefix="", ln=ln)
+# auto-symlink(prefix="", ln=ln)
 #
 # called as:
 #
-#     auto_symlink "NGINX"
+#     auto-symlink "NGINX"
 #
 # with the environment:
 #
@@ -35,7 +35,7 @@
 # with `rm -rf`
 #
 # After processing the environment variables, they are unset to avoid re-processing
-# if auto_symlink is run again
+# if auto-symlink is run again
 #
 function trim() (
   local string="${1}"
@@ -47,7 +47,7 @@ function trim() (
   echo -n "${string}"
 )
 
-function auto_symlink {
+function auto-symlink {
   if [ -z "${1}" ]; then
     prefix="SYMLINK"
   else

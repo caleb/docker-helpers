@@ -8,7 +8,7 @@
   PHP_FPM_PORT_9000_TCP=tcp://1.2.3.4:9000
   PHP_FPM_PORT=tcp://1.2.3.4:9000
 
-  read_link TEST php-fpm 9000 tcp
+  read-link TEST php-fpm 9000 tcp
 
   [ "${TEST_ADDR}" = "1.2.3.4" ]
   [ "${TEST_PORT}" = "9000" ]
@@ -23,7 +23,7 @@
   PHP_FPM_PORT_8000_TCP=tcp://1.2.3.4:8000
   PHP_FPM_PORT=tcp://1.2.3.4:7000
 
-  read_link TEST php-fpm 8000 tcp
+  read-link TEST php-fpm 8000 tcp
 
   [ "${TEST_ADDR}" = "1.2.3.4" ]
   [ "${TEST_PORT}" = "8000" ]
@@ -41,7 +41,7 @@
   # The user overridden port
   TEST_PORT=7000
 
-  read_link TEST php-fpm 9000 tcp
+  read-link TEST php-fpm 9000 tcp
 
   [ "${TEST_ADDR}" = "1.2.3.4" ]
   [ "${TEST_PORT}" = "7000" ]
@@ -56,7 +56,7 @@
   PHP_FPM_PORT_9000_TCP=tcp://1.2.3.4:9000
   PHP_FPM_PORT=tcp://1.2.3.4:9000
 
-  read_link PHP_FPM php-fpm
+  read-link PHP_FPM php-fpm
 
   [ "${PHP_FPM_ADDR}" = "1.2.3.4" ]
   [ "${PHP_FPM_PORT}" = "9000" ]
@@ -71,7 +71,7 @@
   PHP_FPM_PORT_9000_TCP=tcp://1.2.3.4:9000
   PHP_FPM_PORT=tcp://1.2.3.4:9000
 
-  read_link PHP_FPM php-fpm 9000 tcp
+  read-link PHP_FPM php-fpm 9000 tcp
 
   [ "${PHP_FPM_ADDR}" = "1.2.3.4" ]
   [ "${PHP_FPM_PORT}" = "9000" ]
@@ -89,7 +89,7 @@
   # The user overridden port
   PHP_FPM_PORT=7000
 
-  read_link PHP_FPM php-fpm 9000 tcp
+  read-link PHP_FPM php-fpm 9000 tcp
 
   [ "${PHP_FPM_ADDR}" = "1.2.3.4" ]
   [ "${PHP_FPM_PORT}" = "7000" ]
@@ -105,7 +105,7 @@
   PHP_PORT=tcp://1.2.3.4:8000
   PHP_ENV_MY_ENVIRONMENT_VARIABLE=ohhai
 
-  read_link OUT does-not-exist-php-fpm 9000 tcp
+  read-link OUT does-not-exist-php-fpm 9000 tcp
 
   [ "${OUT_ADDR}" = "1.2.3.4" ]
   [ "${OUT_PORT}" = "9000" ]
@@ -124,7 +124,7 @@
 
   OUT_PORT=7000
 
-  read_link OUT does-not-exist-php-fpm 9000 tcp
+  read-link OUT does-not-exist-php-fpm 9000 tcp
 
   [ "${OUT_ADDR}" = "1.2.3.4" ]
   [ "${OUT_PORT}" = "7000" ]
@@ -143,7 +143,7 @@
   # The user overridden port
   PHP_FPM_PORT=9000
 
-  run read_link PHP_FPM php-fpm 8000 tcp
+  run read-link PHP_FPM php-fpm 8000 tcp
 
   [ "${status}" -eq 1 ]
 }
@@ -161,7 +161,7 @@
   PHP_FPM_PORT=2222
   PHP_FPM_PROTO=udp
 
-  read_link PHP_FPM php-fpm 9000 tcp
+  read-link PHP_FPM php-fpm 9000 tcp
 
   [ "${PHP_FPM_ADDR}" = "2.3.4.5" ]
   [ "${PHP_FPM_PORT}" = "2222" ]
@@ -174,7 +174,7 @@
   # This triggers that the link is present
   PHP_FPM_NAME=test/php-fpm
 
-  run require_link PHP_FPM php-fpm
+  run require-link PHP_FPM php-fpm
 
   [ "${status}" -eq 0 ]
 }
@@ -187,7 +187,7 @@
   PHP_FPM_ENV_SOME_VAR="some val"
   PHP_FPM_ENV_ANOTHER_VAR="another val"
 
-  read_link MY_PREFIX php-fpm
+  read-link MY_PREFIX php-fpm
 
   [ "${MY_PREFIX_ENV_SOME_VAR}" = "some val" ]
   [ "${MY_PREFIX_ENV_ANOTHER_VAR}" = "another val" ]
@@ -201,7 +201,7 @@
   PHP_FPM_ENV_SOME_VAR="some val"
   PHP_FPM_ENV_ANOTHER_VAR="another val"
 
-  read_link PHP_FPM php-fpm
+  read-link PHP_FPM php-fpm
 
   [ "${PHP_FPM_ENV_SOME_VAR}" = "some val" ]
   [ "${PHP_FPM_ENV_ANOTHER_VAR}" = "another val" ]
