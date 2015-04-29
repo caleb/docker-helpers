@@ -22,3 +22,16 @@ curl -L https://github.com/caleb/syslog_forwarder/releases/download/v${SYSLOG_FO
 
 tar xzf /tmp/syslog_forwarder.tar.gz -C /usr/local/bin
 rm /tmp/syslog_forwarder.tar.gz
+
+#
+# Install gosu
+#
+# grab gosu for easy step-down from root
+gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4
+arch="$(dpkg --print-architecture)" \
+	&& set -x \
+	&& curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.4/gosu-$arch" \
+	&& curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.4/gosu-$arch.asc" \
+	&& gpg --verify /usr/local/bin/gosu.asc \
+	&& rm /usr/local/bin/gosu.asc \
+	&& chmod +x /usr/local/bin/gosu
