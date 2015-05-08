@@ -93,6 +93,10 @@ function read-link {
       # If this port is not found in the linked container, we want to throw an error
       manually_specified_port=yes
       default_port="${!port_var}"
+    elif [[ "${!port_var}" =~ ^[^:]+://[^:]+:([0-9]+)$ ]]; then
+      # The user didn't specify a port, so set the default port to be the one in the environment
+      # variable
+      default_port="${BASH_REMATCH[1]}"
     elif [ $clobbers_docker_port_env = false ]; then
       # if we aren't clobbering the docker port variable (and thus it /should/ be
       # populated with somethin other than a numerb e.g. tcp://1.2.3.4:1234) make sure
@@ -117,8 +121,8 @@ function read-link {
 
   # If the user specified an address, use that
   if [ -n "${!addr_var}" ]; then
-    # if a port is set, leave it be, else set it to the default port
-    export_var "${port_var}" "${default_port}"
+    # Set the PORT variable to the default port
+    export_var "${port_var}" "${default_port}" true
     # if a proto is set, leave it be, else set it to the default proto
     export_var "${proto_var}" "${default_proto}" $clobbers_docker_port_env
 
