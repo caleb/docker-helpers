@@ -138,6 +138,7 @@
   # This triggers that the link is present
   PHP_FPM_NAME=test/php-fpm
   PHP_FPM_PORT_7000_TCP=tcp://1.2.3.4:7000
+  PHP_FPM_PORT_8000_TCP=tcp://1.2.3.4:8000
   PHP_FPM_PORT=tcp://1.2.3.4:8000
 
   # The user overridden port
@@ -148,7 +149,7 @@
   [ "${status}" -eq 1 ]
 }
 
-@test "An overridden address, but not port" {
+@test "An overridden address, but not port with a container that exists" {
   . ../helpers/links.sh
 
   # This triggers that the link is present
@@ -164,6 +165,36 @@
   [ "${PHP_FPM_ADDR}" = "2.3.4.5" ]
   [ "${PHP_FPM_PORT}" = "7000" ]
   [ "${PHP_FPM_PROTO}" = "tcp" ]
+}
+
+@test "An overridden address, but not port with a container that does not exist" {
+  . ../helpers/links.sh
+
+  # The user overridden port
+  PHP_FPM_ADDR=2.3.4.5
+
+  read-link PHP_FPM php-fpm 9000 tcp
+
+  [ "${PHP_FPM_ADDR}" = "2.3.4.5" ]
+  [ "${PHP_FPM_PORT}" = "9000" ]
+  [ "${PHP_FPM_PROTO}" = "tcp" ]
+}
+
+@test "An overridden address, make sure the environment variables are exported" {
+  . ../helpers/links.sh
+
+  # This triggers that the link is present
+  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_PORT_7000_TCP=tcp://1.2.3.4:7000
+  PHP_FPM_PORT=tcp://1.2.3.4:7000
+  PHP_FPM_ENV_MYVAR=myval
+
+  # The user overridden port
+  PHP_FPM_ADDR=2.3.4.5
+
+  read-link MYPREFIX php-fpm 9000 tcp
+
+  [ "${MYPREFIX_ENV_MYVAR}" = "myval" ]
 }
 
 @test "A completely overridden address" {

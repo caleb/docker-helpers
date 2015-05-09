@@ -55,26 +55,18 @@ function read-link {
   local port_var="${output_prefix}_PORT"
   local proto_var="${output_prefix}_PROTO"
 
-  # If the PORT variable clashes with docker's default *_PORT, detect if the user
-  # overrode it
-  clobbers_docker_port_env=false
-  if [ "${port_var}" = "${env_link_name}_PORT" ]; then
-    clobbers_docker_port_env=true
-  fi
+  local link_test_var="${env_link_name}_NAME"
+  local link_default_port_var="${env_link_name}_PORT"
 
   function export_var {
     var="${1}"
     value="${2}"
-    clobber="${3:-false}"
 
-    if [ $clobber = true ] || [ -z "${!var}" ]; then
-      eval "export ${var}=\"${value}\""
-    fi
+    eval "export ${var}=\"${value}\""
   }
 
   function export_port {
     port_spec="${1}"
-    clobber_port="${2}"
 
     proto="${port_spec%%://*}"
     addr="${port_spec#*://}"
@@ -82,28 +74,31 @@ function read-link {
     port="${port_spec##*:}"
 
     export_var "${addr_var}" "${addr}"
-    export_var "${port_var}" "${port}" $clobber_port
+    export_var "${port_var}" "${port}"
     export_var "${proto_var}" "${proto}"
   }
 
+  # Determine the port to check for
+  declare -a ports
+  ports=()
+  if [ -n "${default_port}" ]; then
+    # default to the port specified by the caller
+    ports=($ports "${default_port}")
+  fi
+
+  if [[ "${!link_default_port_var}" =~ ^[^:]+://[^:]+:([0-9]+)$ ]]; then
+    # If a default link port exists and is in the right format, grab it
+    ports=($ports "${BASH_REMATCH[1]}")
+  fi
+
   # set the default port to the port specified by the user, if there is one
+  # or use the first exported port found
   if [ -n "${!port_var}" ]; then
     if [[ "${!port_var}" =~ ^[0-9]+$ ]]; then
-      # Mark that the user specified a port via the PREFIX_PORT environment variable
-      # If this port is not found in the linked container, we want to throw an error
-      manually_specified_port=yes
-      default_port="${!port_var}"
-    elif [[ "${!port_var}" =~ ^[^:]+://[^:]+:([0-9]+)$ ]]; then
-      # The user didn't specify a port, so set the default port to be the one in the environment
-      # variable
-      default_port="${BASH_REMATCH[1]}"
-    elif [ $clobbers_docker_port_env = false ]; then
-      # if we aren't clobbering the docker port variable (and thus it /should/ be
-      # populated with somethin other than a numerb e.g. tcp://1.2.3.4:1234) make sure
-      # the port is a number
-      echo "You specified a port (via ${port_var}=${!port_var}) that is not a number" >&2
-      exit 1
-    elif [[ $clobbers_docker_port_env = true ]] && [[ ! "${!port_var}" =~ ^[^:]+://[^:]+:[0-9]+$ ]]; then
+      # If the user specified the port variable, then we only want to consider that port
+      ports=("${!port_var}")
+    elif [ "${link_default_port_var}" != "${port_var}" ] || \
+           [[ ! "${!port_var}" =~ ^[^:]+://[^:]+:([0-9]+)$ ]]; then
       # If we are clobbering the docker port variable, raise an error if it was set
       # to something besides the standard docker format
       echo "You specified a port (via ${port_var}=${!port_var}) that is not a number" >&2
@@ -119,34 +114,54 @@ function read-link {
     default_proto="tcp"
   fi
 
-  # If the user specified an address, use that
-  if [ -n "${!addr_var}" ]; then
-    # Set the PORT variable to the default port
-    export_var "${port_var}" "${default_port}" true
-    # if a proto is set, leave it be, else set it to the default proto
-    export_var "${proto_var}" "${default_proto}" $clobbers_docker_port_env
+  # Determine the default port to use
+  if [ -n "${!link_test_var}" ]; then
+    port_found=""
+    # Loop through the possible ports and find the first one that is exported
+    for port in "${ports[@]}"; do
+      link_port_var="${env_link_name}_PORT_${port}_${default_proto^^}"
+      if [ -n "${!link_port_var}" ]; then
+        port_found="${port}"
+        break
+      fi
+    done
 
-    return
+    if [ -n "${port_found}" ]; then
+      default_port="${port_found}"
+    elif [ -n "${!addr_var}" ]; then
+      # If they specified an address, and no port was found in the linked container
+      # then just use the first port since we can't determine if the port is open
+      # on the target machine
+      default_port="${ports[0]}"
+    else
+      # Use the first port in the list, we may error out later depending on
+      # other variables
+      default_port="${ports[0]}"
+    fi
+  else
+    # Just use the first port as our default port
+    default_port="${ports[0]}"
   fi
 
-  # Test if the link with the given name exists
-  link_test_var="${env_link_name}_NAME"
-  link_first_addr_var="${env_link_name}_PORT"
-
-  if [ -n "${!link_test_var}" ]; then
+  # If the user specified an address, we can exit early since we have everything
+  # we need
+  if [ -n "${!addr_var}" ]; then
+    # Set the PORT variable to the default port
+    export_var "${port_var}" "${default_port}"
+    # if a proto is set, leave it be, else set it to the default proto
+    export_var "${proto_var}" "${default_proto}"
+  elif [ -n "${!link_test_var}" ] && [ -n "${default_port}" ]; then
+    # If a link exists with the candidate name, and we are looking for a port, test
+    # to ensure that container exports that port
     link_port_var="${env_link_name}_PORT_${default_port}_${default_proto^^}"
 
     # If the link exists, use the value of that to export the variables
     link_port_value="${!link_port_var}"
     if [ -n "${link_port_value}" ]; then
-      export_port "${link_port_value}" $clobbers_docker_port_env
-    elif [ -n "${default_port}" ] && [ -n "${manually_specified_port}" ]; then
+      export_port "${link_port_value}"
+    else
       echo "The port ${default_port} isn't published by the container '${link_name}' on the ${default_proto} protocol" >&2
       exit 1
-    elif [ -n "${!link_first_addr_var}" ]; then
-      # Use the first port exposed by docker
-      link_first_addr_value="${!link_first_addr_var}"
-      export_port "${link_first_addr_value}" $clobbers_docker_port_env
     fi
   else
     #
@@ -157,7 +172,7 @@ function read-link {
         if [[ "${var}" =~ ^([A-Z0-9_]+)_PORT_${default_port}_${default_proto^^}$ ]]; then
           # Since we sniffed the link, set the link_name so we can set up the environment later
           env_link_name="${BASH_REMATCH[1]}"
-          export_port "${!var}" $clobbers_docker_port_env
+          export_port "${!var}"
         fi
       done
 
