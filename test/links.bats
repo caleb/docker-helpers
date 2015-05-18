@@ -3,16 +3,16 @@
 @test "Default link name using the default port" {
   . ../helpers/links.sh
 
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
 
   # This triggers that the link is present
-  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_NAME=/test/php-fpm
   PHP_FPM_PORT_9000_TCP=tcp://1.2.3.4:9000
   PHP_FPM_PORT=tcp://1.2.3.4:9000
 
   read-link TEST php-fpm 9000 tcp
 
-  [ "${TEST_ADDR}" = "1.2.3.4" ]
+  [ "${TEST_ADDR}" = "php-fpm" ]
   [ "${TEST_PORT}" = "9000" ]
   [ "${TEST_PROTO}" = "tcp" ]
 }
@@ -20,16 +20,16 @@
 @test "Default link name with a specified port that's different from the first published" {
   . ../helpers/links.sh
 
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
 
   # This triggers that the link is present
-  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_NAME=/test/php-fpm
   PHP_FPM_PORT_8000_TCP=tcp://1.2.3.4:8000
   PHP_FPM_PORT=tcp://1.2.3.4:7000
 
   read-link TEST php-fpm 8000 tcp
 
-  [ "${TEST_ADDR}" = "1.2.3.4" ]
+  [ "${TEST_ADDR}" = "php-fpm" ]
   [ "${TEST_PORT}" = "8000" ]
   [ "${TEST_PROTO}" = "tcp" ]
 }
@@ -37,10 +37,10 @@
 @test "Default link name with a manually overridden port" {
   . ../helpers/links.sh
 
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
 
   # This triggers that the link is present
-  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_NAME=/test/php-fpm
   PHP_FPM_PORT_7000_TCP=tcp://1.2.3.4:7000
   PHP_FPM_PORT=tcp://1.2.3.4:8000
 
@@ -49,7 +49,7 @@
 
   read-link TEST php-fpm 9000 tcp
 
-  [ "${TEST_ADDR}" = "1.2.3.4" ]
+  [ "${TEST_ADDR}" = "php-fpm" ]
   [ "${TEST_PORT}" = "7000" ]
   [ "${TEST_PROTO}" = "tcp" ]
 }
@@ -57,16 +57,16 @@
 @test "Output prefix is the same as the link name without a default port or proto" {
   . ../helpers/links.sh
 
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
 
   # This triggers that the link is present
-  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_NAME=/test/php-fpm
   PHP_FPM_PORT_9000_TCP=tcp://1.2.3.4:9000
   PHP_FPM_PORT=tcp://1.2.3.4:9000
 
   read-link PHP_FPM php-fpm
 
-  [ "${PHP_FPM_ADDR}" = "1.2.3.4" ]
+  [ "${PHP_FPM_ADDR}" = "php-fpm" ]
   [ "${PHP_FPM_PORT}" = "9000" ]
   [ "${PHP_FPM_PROTO}" = "tcp" ]
 }
@@ -74,16 +74,16 @@
 @test "Output prefix is the same as the link name" {
   . ../helpers/links.sh
 
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
 
   # This triggers that the link is present
-  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_NAME=/test/php-fpm
   PHP_FPM_PORT_9000_TCP=tcp://1.2.3.4:9000
   PHP_FPM_PORT=tcp://1.2.3.4:9000
 
   read-link PHP_FPM php-fpm 9000 tcp
 
-  [ "${PHP_FPM_ADDR}" = "1.2.3.4" ]
+  [ "${PHP_FPM_ADDR}" = "php-fpm" ]
   [ "${PHP_FPM_PORT}" = "9000" ]
   [ "${PHP_FPM_PROTO}" = "tcp" ]
 }
@@ -91,10 +91,10 @@
 @test "Output prefix is the same as the link name with an overridden port" {
   . ../helpers/links.sh
 
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
 
   # This triggers that the link is present
-  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_NAME=/test/php-fpm
   PHP_FPM_PORT_7000_TCP=tcp://1.2.3.4:7000
   PHP_FPM_PORT=tcp://1.2.3.4:8000
 
@@ -103,7 +103,7 @@
 
   read-link PHP_FPM php-fpm 9000 tcp
 
-  [ "${PHP_FPM_ADDR}" = "1.2.3.4" ]
+  [ "${PHP_FPM_ADDR}" = "php-fpm" ]
   [ "${PHP_FPM_PORT}" = "7000" ]
   [ "${PHP_FPM_PROTO}" = "tcp" ]
 }
@@ -112,14 +112,14 @@
   . ../helpers/links.sh
 
   # This triggers that the link is present
-  PHP_NAME=test/php-fpm
+  PHP_NAME=/test/php-fpm
   PHP_PORT_9000_TCP=tcp://1.2.3.4:9000
   PHP_PORT=tcp://1.2.3.4:8000
   PHP_ENV_MY_ENVIRONMENT_VARIABLE=ohhai
 
   read-link OUT does-not-exist-php-fpm 9000 tcp
 
-  [ "${OUT_ADDR}" = "1.2.3.4" ]
+  [ "${OUT_ADDR}" = "php-fpm" ]
   [ "${OUT_PORT}" = "9000" ]
   [ "${OUT_PROTO}" = "tcp" ]
   [ "${OUT_ENV_MY_ENVIRONMENT_VARIABLE}" = "ohhai" ]
@@ -129,7 +129,7 @@
   . ../helpers/links.sh
 
   # This triggers that the link is present
-  PHP_NAME=test/php-fpm
+  PHP_NAME=/test/php-fpm
   PHP_PORT_7000_TCP=tcp://1.2.3.4:7000
   PHP_PORT=tcp://1.2.3.4:8000
   PHP_ENV_MY_ENVIRONMENT_VARIABLE=ohhai
@@ -138,17 +138,17 @@
 
   read-link OUT does-not-exist-php-fpm 9000 tcp
 
-  [ "${OUT_ADDR}" = "1.2.3.4" ]
+  [ "${OUT_ADDR}" = "php-fpm" ]
   [ "${OUT_PORT}" = "7000" ]
   [ "${OUT_PROTO}" = "tcp" ]
   [ "${OUT_ENV_MY_ENVIRONMENT_VARIABLE}" = "ohhai" ]
 }
 
-@test "Output prefix is the same as the link name with an overridden port that is not published" {
+@test "Error when output prefix is the same as the link name with an overridden port that is not published" {
   . ../helpers/links.sh
 
   # This triggers that the link is present
-  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_NAME=/test/php-fpm
   PHP_FPM_PORT_7000_TCP=tcp://1.2.3.4:7000
   PHP_FPM_PORT_8000_TCP=tcp://1.2.3.4:8000
   PHP_FPM_PORT=tcp://1.2.3.4:8000
@@ -164,10 +164,10 @@
 @test "An overridden address, but not port with a container that exists" {
   . ../helpers/links.sh
 
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
 
   # This triggers that the link is present
-  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_NAME=/test/php-fpm
   PHP_FPM_PORT_7000_TCP=tcp://1.2.3.4:7000
   PHP_FPM_PORT=tcp://1.2.3.4:7000
 
@@ -184,7 +184,7 @@
 @test "An overridden address, but not port with a container that does not exist" {
   . ../helpers/links.sh
 
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
 
   # The user overridden port
   PHP_FPM_ADDR=2.3.4.5
@@ -199,10 +199,10 @@
 @test "An overridden address, make sure the environment variables are exported" {
   . ../helpers/links.sh
 
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
 
   # This triggers that the link is present
-  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_NAME=/test/php-fpm
   PHP_FPM_PORT_7000_TCP=tcp://1.2.3.4:7000
   PHP_FPM_PORT=tcp://1.2.3.4:7000
   PHP_FPM_ENV_MYVAR=myval
@@ -218,10 +218,10 @@
 @test "A completely overridden address" {
   . ../helpers/links.sh
 
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
 
   # This triggers that the link is present
-  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_NAME=/test/php-fpm
   PHP_FPM_PORT_7000_TCP=tcp://1.2.3.4:7000
   PHP_FPM_PORT=tcp://1.2.3.4:8000
 
@@ -240,10 +240,10 @@
 @test "Doesn't error out when a required link doesn't publish a port and the user doesn't specify a port" {
   . ../helpers/links.sh
 
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
 
   # This triggers that the link is present
-  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_NAME=/test/php-fpm
 
   run require-link PHP_FPM php-fpm
 
@@ -253,10 +253,10 @@
 @test "Exports linked environment variables" {
   . ../helpers/links.sh
 
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
 
   # This triggers that the link is present
-  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_NAME=/test/php-fpm
   PHP_FPM_ENV_SOME_VAR="some val"
   PHP_FPM_ENV_ANOTHER_VAR="another val"
 
@@ -269,10 +269,10 @@
 @test "Exports linked environment variables when output prefix clobbers the link name" {
   . ../helpers/links.sh
 
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
 
   # This triggers that the link is present
-  PHP_FPM_NAME=test/php-fpm
+  PHP_FPM_NAME=/test/php-fpm
   PHP_FPM_ENV_SOME_VAR="some val"
   PHP_FPM_ENV_ANOTHER_VAR="another val"
 
@@ -286,7 +286,7 @@
   . ../helpers/links.sh
 
   # This triggers that the link is present
-  MY_AMBASSADOR_NAME=test/my-ambassador
+  MY_AMBASSADOR_NAME=/test/my-ambassador
   AMBASSADOR=my-ambassador
 
   read-link PHP_FPM php-fpm 7000 tcp
@@ -300,7 +300,7 @@
   . ../helpers/links.sh
 
   # This triggers that the link is present
-  MY_AMBASSADOR_NAME=test/my-ambassador
+  MY_AMBASSADOR_NAME=/test/my-ambassador
   AMBASSADOR=my-ambassador
   PHP_FPM_PORT=8000
 
@@ -315,7 +315,7 @@
   . ../helpers/links.sh
 
   # This triggers that the link is present
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
 
   read-link PHP_FPM php-fpm 7000 tcp
 
@@ -328,7 +328,7 @@
   . ../helpers/links.sh
 
   # This triggers that the link is present
-  AMBASSADOR_NAME=test/ambassador
+  AMBASSADOR_NAME=/test/ambassador
   PHP_FPM_PORT=8000
 
   read-link PHP_FPM php-fpm 7000 tcp

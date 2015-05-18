@@ -52,7 +52,15 @@ function read-link {
   function environmentalize {
     local v="${1^^}"
     v="${v//-/_}"
-    echo "${v}"
+    printf "${v}"
+  }
+
+  function hostname_from_link_var {
+    if [[ "${1}" =~ ^/[^/]+/(.*)$ ]]; then
+      printf "${BASH_REMATCH[1]}"
+    else
+      printf ""
+    fi
   }
 
   output_prefix="${1}"
@@ -79,13 +87,18 @@ function read-link {
 
   function export_port {
     port_spec="${1}"
+    link_var_value="${2}"
 
     proto="${port_spec%%://*}"
     addr="${port_spec#*://}"
     addr="${addr%:*}"
     port="${port_spec##*:}"
 
-    export_var "${addr_var}" "${addr}"
+    if [ -n "${link_var_value}" ]; then
+      export_var "${addr_var}" "$(hostname_from_link_var "${link_var_value}")"
+    else
+      export_var "${addr_var}" "${addr}"
+    fi
     export_var "${port_var}" "${port}"
     export_var "${proto_var}" "${proto}"
   }
@@ -170,7 +183,7 @@ function read-link {
     # If the link exists, use the value of that to export the variables
     link_port_value="${!link_port_var}"
     if [ -n "${link_port_value}" ]; then
-      export_port "${link_port_value}"
+      export_port "${link_port_value}" "${!link_test_var}"
     else
       echo "The port ${default_port} isn't published by the container '${link_name}' on the ${default_proto} protocol" >&2
       exit 1
@@ -211,7 +224,8 @@ function read-link {
           if [[ "${var}" =~ ^([A-Z0-9_]+)_PORT_${default_port}_${default_proto^^}$ ]]; then
             # Since we sniffed the link, set the link_name so we can set up the environment later
             env_link_name="${BASH_REMATCH[1]}"
-            export_port "${!var}"
+            link_var="${env_link_name}_NAME"
+            export_port "${!var}" "${!link_var}"
           fi
         done
       fi
