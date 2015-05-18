@@ -17,6 +17,12 @@
 # a link by `link_name` isn't found. Setting `required` to true casuses the script
 # to `exit 1` printing an error message. Set to `false` to allow missing links
 #
+# If an ambassador pattern is being used, you can specify the ambassador with the
+# AMBASSADOR variable. Specify the alias of your ambassador link.
+#
+# If you don't specify an ambassador explicitly and a container link named
+# "ambassador" is found, then that acts as a fallback
+#
 # Example:
 #
 # In a container with the link `php-fpm` with a published port 8000 on ip 1.2.3.4:
@@ -41,15 +47,21 @@
 # and the script will exit with code 1.
 #
 function read-link {
+  # Turns a lowercased, dasherized string into an environment variable
+  # my-volume-name -> MY_VOLUME_NAME
+  function environmentalize {
+    local v="${1^^}"
+    v="${v//-/_}"
+    echo "${v}"
+  }
+
   output_prefix="${1}"
   link_name="${2}"
   default_port="${3:-""}"
   default_proto="${4:-""}"
   required="${5:-false}"
 
-  # Uppercase and convert - to _
-  env_link_name="${link_name^^}"
-  env_link_name="${env_link_name//-/_}"
+  env_link_name="$(environmentalize "${link_name}")"
 
   local addr_var="${output_prefix}_ADDR"
   local port_var="${output_prefix}_PORT"
@@ -95,7 +107,7 @@ function read-link {
   # or use the first exported port found
   if [ -n "${!port_var}" ]; then
     if [[ "${!port_var}" =~ ^[0-9]+$ ]]; then
-      # If the user specified the port variable, then we only want to consider that port
+
       ports=("${!port_var}")
     elif [ "${link_default_port_var}" != "${port_var}" ] || \
            [[ ! "${!port_var}" =~ ^[^:]+://[^:]+:([0-9]+)$ ]]; then
@@ -165,16 +177,44 @@ function read-link {
     fi
   else
     #
-    # Try to sniff the link based on the port and protocol given
+    # Try to find an ambassador, falling back to sniffing the link based on the
+    # port and protocol given
     #
     if [ -n "${default_port}" ] && [ -n "${default_proto}" ]; then
-      for var in $(compgen -v); do
-        if [[ "${var}" =~ ^([A-Z0-9_]+)_PORT_${default_port}_${default_proto^^}$ ]]; then
-          # Since we sniffed the link, set the link_name so we can set up the environment later
-          env_link_name="${BASH_REMATCH[1]}"
-          export_port "${!var}"
+      ambassador_var="AMBASSADOR"
+      ambassador_default="ambassador"
+      ambassador_default_link_var="AMBASSADOR_NAME"
+
+      # If the user manually specified an ambassador, use that one
+      if [ -n "${!ambassador_var}" ]; then
+        ambassador="${!ambassador_var}"
+        ambassador_link_var="$(environmentalize "${ambassador}")_NAME"
+        if [ -n "${!ambassador_link_var}" ]; then
+          # if we found the ambassador named use that as the addr, downcased
+          export_var "${addr_var}" "${ambassador,,}"
+          export_var "${port_var}" "${default_port}"
+          export_var "${proto_var}" "${default_proto}"
+        else
+          echo "You specified an ambassador but a linked ambassador named ${ambassador} was not found." >&2
+          exit 1
         fi
-      done
+      elif [ -n "${!ambassador_default_link_var}" ]; then
+        # If the default ambassador "ambassador" was linked in, use that
+        export_var "${addr_var}" "${ambassador_default}"
+        export_var "${port_var}" "${default_port}"
+        export_var "${proto_var}" "${default_proto}"
+      else
+        #
+        # As a last resort, try to find a container that exposes the specified port
+        #
+        for var in $(compgen -v); do
+          if [[ "${var}" =~ ^([A-Z0-9_]+)_PORT_${default_port}_${default_proto^^}$ ]]; then
+            # Since we sniffed the link, set the link_name so we can set up the environment later
+            env_link_name="${BASH_REMATCH[1]}"
+            export_port "${!var}"
+          fi
+        done
+      fi
 
       # A link with the specified name was not found
       # if we require this link, print an error and exit if all the properties aren't set
