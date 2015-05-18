@@ -14,32 +14,44 @@ function read-var {
     fi
   }
 
-  # if the output variable is already set, just export it
-  if [ -n "${!output}" ]; then
-    export_var "${output}"
-    return
-  fi
-
   local default_value=""
-  declare -a vars=()
+  declare -a vars=("${output}")
+  declare -a candidate_vars=()
+  declare -a links=()
 
   local next_is_default=""
   local value=""
 
-  for var in ${@}; do
-    value="${!var}"
-    if [ "${var}" = "--" ]; then
+  for var in "${@}"; do
+    # Pull out the links
+    if [[ "${var}" =~ ^@ ]]; then
+      link="${var##@}"
+      links+="${link}"
+    elif [[ "${var}" = "--" ]]; then
       next_is_default=true
-      continue
-    fi
-
-    if [ -n "${next_is_default}" ]; then
+    elif [ -n "${next_is_default}" ]; then
       default_value="${var}"
       break
+    else
+      candidate_vars+=("${var}")
     fi
+  done
 
-    if [ -n "${value}" ]; then
-      value="${value}"
+  # We start our vars with the output var and candidate vars
+  for var in "${candidate_vars[@]}"; do
+    vars+=("${var}")
+  done
+
+  # Go through the links and add variants of the candidates with the link prefix
+  for link in "${links[@]}"; do
+    for var in "${candidate_vars[@]}"; do
+      vars+=("${link}_ENV_${var}")
+    done
+  done
+
+  for var in "${vars[@]}"; do
+    if [ -n "${!var}" ]; then
+      value="${!var}"
       break
     fi
   done
