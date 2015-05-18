@@ -20,6 +20,7 @@ function read-var {
   declare -a links=()
 
   local next_is_default=""
+  local found_default_marker=""
   local value=""
 
   for var in "${@}"; do
@@ -29,6 +30,7 @@ function read-var {
       links+="${link}"
     elif [[ "${var}" = "--" ]]; then
       next_is_default=true
+      found_default_marker=true
     elif [ -n "${next_is_default}" ]; then
       default_value="${var}"
       break
@@ -58,7 +60,7 @@ function read-var {
 
   if [ -n "${value}" ]; then
     export_var "${output}" "${value}"
-  elif [ -n "${default_value}" ]; then
+  elif [ -n "${found_default_marker}" ]; then
     export_var "${output}" "${default_value}"
   else
     echo "The no value was found for the variable \"${output}\". Tried \"${@}\"" >&2

@@ -28,6 +28,14 @@
   [ "${NGINX_PHP_CLIENT_MAX_BODY}" = "8m" ]
 }
 
+@test "Reads the default value as \"\" the double dashes is specified but no value is given" {
+  . ../helpers/vars.sh
+
+  read-var NGINX_PHP_CLIENT_MAX_BODY PHP_FPM_MAX_FILESIZE --
+
+  [ "${NGINX_PHP_CLIENT_MAX_BODY}" = "" ]
+}
+
 @test "Returns an error if no value is found" {
   . ../helpers/vars.sh
 
