@@ -185,10 +185,19 @@ function read-link {
 
     # If the specified container IS an ambassador, allow the port to be
     # un-exported and plow ahead
-    container_is_ambassador_test_var="${env_link_name}_ENV___AMBASSADOR__"
+    tags_var="${env_link_name}_ENV___TAGS__"
+    tags="${!tags_var}"
+    if [[ $(uname) =~ Linux ]]; then
+      tags_re='\bambassador\b'
+    elif [[ $(uname) =~ Darwin ]]; then
+      tags_re='[[:<:]]ambassador[[:>:]]'
+    else
+      tags_re='ambassador'
+    fi
+
     if [ -n "${link_port_value}" ]; then
       export_port "${link_port_value}" "${!link_test_var}"
-    elif [ -n "${!container_is_ambassador_test_var}" ]; then
+    elif [[ "${tags,,}" =~ $tags_re ]]; then
       export_var "${addr_var}" "$(hostname_from_link_var "${!link_test_var}")"
       export_var "${port_var}" "${default_port}"
       export_var "${proto_var}" "${default_proto}"

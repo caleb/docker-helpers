@@ -300,7 +300,7 @@
   . ../helpers/links.sh
 
   # This is the test variable that shows up when an ambassador is present
-  AMBASSADOR_ENV___AMBASSADOR__=YES
+  AMBASSADOR_ENV___TAGS__=ambassador
   # This triggers that the link is present
   AMBASSADOR_NAME=/test/ambassador
 
