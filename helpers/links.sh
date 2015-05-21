@@ -182,8 +182,16 @@ function read-link {
 
     # If the link exists, use the value of that to export the variables
     link_port_value="${!link_port_var}"
+
+    # If the specified container IS an ambassador, allow the port to be
+    # un-exported and plow ahead
+    container_is_ambassador_test_var="${env_link_name}_ENV___AMBASSADOR__"
     if [ -n "${link_port_value}" ]; then
       export_port "${link_port_value}" "${!link_test_var}"
+    elif [ -n "${!container_is_ambassador_test_var}" ]; then
+      export_var "${addr_var}" "$(hostname_from_link_var "${!link_test_var}")"
+      export_var "${port_var}" "${default_port}"
+      export_var "${proto_var}" "${default_proto}"
     else
       echo "The port ${default_port} isn't published by the container '${link_name}' on the ${default_proto} protocol" >&2
       exit 1

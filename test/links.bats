@@ -296,6 +296,21 @@
   [ "${PHP_FPM_PROTO}" = "tcp" ]
 }
 
+@test "Allows reading the link of an ambassador container, which doesn't export the port" {
+  . ../helpers/links.sh
+
+  # This is the test variable that shows up when an ambassador is present
+  AMBASSADOR_ENV___AMBASSADOR__=YES
+  # This triggers that the link is present
+  AMBASSADOR_NAME=/test/ambassador
+
+  read-link AMBASSADOR ambassador 7000 tcp
+
+  [ "${AMBASSADOR_ADDR}" = "ambassador" ]
+  [ "${AMBASSADOR_PORT}" = "7000" ]
+  [ "${AMBASSADOR_PROTO}" = "tcp" ]
+}
+
 @test "Uses a manually specified ambassador and an overridden port if one is found" {
   . ../helpers/links.sh
 
