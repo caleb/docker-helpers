@@ -63,36 +63,58 @@ function read-link {
     fi
   }
 
-  output_prefix="${1}"
-  link_name="${2}"
-  default_port="${3:-""}"
-  default_proto="${4:-""}"
-  required="${5:-false}"
+  local output_prefix="${1}"
+  local link_name="${2}"
+  local default_port="${3:-""}"
+  local default_proto="${4:-""}"
+  local required="${5:-false}"
 
-  env_link_name="$(environmentalize "${link_name}")"
+  local env_link_name="$(environmentalize "${link_name}")"
 
   local addr_var="${output_prefix}_ADDR"
   local port_var="${output_prefix}_PORT"
   local proto_var="${output_prefix}_PROTO"
 
-  local link_test_var="${env_link_name}_NAME"
+  local default_port
+  local default_proto
+
+  local link_var="${env_link_name}_NAME"
+  local link_port_var
+  local link_port_value
   local link_default_port_var="${env_link_name}_PORT"
 
+  local env_prefix
+  local env_output_prefix
+
+  local var
+  local -a ports=()
+  local port_found
+  local var_name
+
+  local tags
+  local tags_var
+  local tags_re
+
+  local ambassador
+  local ambassador_var="AMBASSADOR"
+  local ambassador_default="ambassador"
+  local ambassador_default_link_var="AMBASSADOR_NAME"
+
   function export_var {
-    var="${1}"
-    value="${2}"
+    local var="${1}"
+    local value="${2}"
 
     eval "export ${var}=\"${value}\""
   }
 
   function export_port {
-    port_spec="${1}"
-    link_var_value="${2}"
+    local port_spec="${1}"
+    local link_var_value="${2}"
 
-    proto="${port_spec%%://*}"
-    addr="${port_spec#*://}"
+    local proto="${port_spec%%://*}"
+    local addr="${port_spec#*://}"
     addr="${addr%:*}"
-    port="${port_spec##*:}"
+    local port="${port_spec##*:}"
 
     if [ -n "${link_var_value}" ]; then
       export_var "${addr_var}" "$(hostname_from_link_var "${link_var_value}")"
@@ -104,7 +126,6 @@ function read-link {
   }
 
   # Determine the port to check for
-  declare -a ports
   ports=()
   if [ -n "${default_port}" ]; then
     # default to the port specified by the caller
@@ -120,7 +141,6 @@ function read-link {
   # or use the first exported port found
   if [ -n "${!port_var}" ]; then
     if [[ "${!port_var}" =~ ^[0-9]+$ ]]; then
-
       ports=("${!port_var}")
     elif [ "${link_default_port_var}" != "${port_var}" ] || \
            [[ ! "${!port_var}" =~ ^[^:]+://[^:]+:([0-9]+)$ ]]; then
@@ -140,8 +160,7 @@ function read-link {
   fi
 
   # Determine the default port to use
-  if [ -n "${!link_test_var}" ]; then
-    port_found=""
+  if [ -n "${!link_var}" ]; then
     # Loop through the possible ports and find the first one that is exported
     for port in "${ports[@]}"; do
       link_port_var="${env_link_name}_PORT_${port}_${default_proto^^}"
@@ -175,7 +194,7 @@ function read-link {
     export_var "${port_var}" "${default_port}"
     # if a proto is set, leave it be, else set it to the default proto
     export_var "${proto_var}" "${default_proto}"
-  elif [ -n "${!link_test_var}" ] && [ -n "${default_port}" ]; then
+  elif [ -n "${!link_var}" ] && [ -n "${default_port}" ]; then
     # If a link exists with the candidate name, and we are looking for a port, test
     # to ensure that container exports that port
     link_port_var="${env_link_name}_PORT_${default_port}_${default_proto^^}"
@@ -196,9 +215,9 @@ function read-link {
     fi
 
     if [ -n "${link_port_value}" ]; then
-      export_port "${link_port_value}" "${!link_test_var}"
+      export_port "${link_port_value}" "${!link_var}"
     elif [[ "${tags,,}" =~ $tags_re ]]; then
-      export_var "${addr_var}" "$(hostname_from_link_var "${!link_test_var}")"
+      export_var "${addr_var}" "$(hostname_from_link_var "${!link_var}")"
       export_var "${port_var}" "${default_port}"
       export_var "${proto_var}" "${default_proto}"
     else
@@ -211,10 +230,6 @@ function read-link {
     # port and protocol given
     #
     if [ -n "${default_port}" ] && [ -n "${default_proto}" ]; then
-      ambassador_var="AMBASSADOR"
-      ambassador_default="ambassador"
-      ambassador_default_link_var="AMBASSADOR_NAME"
-
       # If the user manually specified an ambassador, use that one
       if [ -n "${!ambassador_var}" ]; then
         ambassador="${!ambassador_var}"
@@ -282,10 +297,10 @@ done
 # require-link calls readlink with its parameters, but passes `true` for the `required` parameter
 #
 function require-link {
-  output_prefix="${1}"
-  link_name="${2}"
-  default_port="${3:-""}"
-  default_proto="${4:-""}"
+  local output_prefix="${1}"
+  local link_name="${2}"
+  local default_port="${3:-""}"
+  local default_proto="${4:-""}"
 
   read-link "${output_prefix}" "${link_name}" "${default_port}" "${default_proto}" true
 }
