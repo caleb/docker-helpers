@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
 function read-var {
+  local output
   output="${1}" && shift
 
   function export_var {
-    var="${1}"
+    local var="${1}"
+    local value
 
     if [ "${#@}" -gt 1 ]; then
       value="${2}"
@@ -14,11 +16,13 @@ function read-var {
     fi
   }
 
-  local default_value=""
-  declare -a vars=("${output}")
-  declare -a candidate_vars=()
-  declare -a links=()
+  local var
+  local default_value
+  local -a vars=("${output}")
+  local -a candidate_vars=()
+  local -a links=()
 
+  local link
   local next_is_default=""
   local found_default_marker=""
   local value=""
