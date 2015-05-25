@@ -48,6 +48,16 @@ function trim() (
 )
 
 function auto-symlink {
+  local prefix
+  local sed
+  local ln
+  local link_suffix
+  local link
+  local from
+  local to
+  local arrow
+  local var
+
   if [ -z "${1}" ]; then
     prefix="SYMLINK"
   else
