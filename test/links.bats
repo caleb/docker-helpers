@@ -48,3 +48,15 @@
   [ "${TEST_PORT}" = "9000" ]
   [ "${TEST_PROTO}" = "udp" ]
 }
+
+@test "Specifying the AMBASSADOR environment variable causes that host to be used as the default" {
+  . ../helpers/links.sh
+
+  AMBASSADOR=ambassador
+
+  read-link TEST php-fpm 9000 tcp
+
+  [ "${TEST_ADDR}" = "ambassador" ]
+  [ "${TEST_PORT}" = "9000" ]
+  [ "${TEST_PROTO}" = "tcp" ]
+}

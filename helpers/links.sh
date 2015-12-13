@@ -15,6 +15,8 @@
 # If you specify `required` as `true` then we test if the host in the resulting
 # `_ADDR` environment variable exists, and if it doesn't we print a helpful message and return a non-zero result
 #
+# If you specify the environment variable AMBASSADOR=<some ambassador host> then that host will be used as the default instead of the host that is passed in
+#
 # Example:
 #
 # In a container where none of the output variables are overridden, and this link is read
@@ -43,6 +45,7 @@ function read-link {
   local addr_var="${output_prefix}_ADDR"
   local port_var="${output_prefix}_PORT"
   local proto_var="${output_prefix}_PROTO"
+  local ambassador="${AMBASSADOR}"
 
   function export_var {
     local var="${1}"
@@ -53,7 +56,12 @@ function read-link {
 
   # If the *_ADDR var isn't set, assume the default
   if [ -z "${!addr_var}" ]; then
-    export_var "${addr_var}" "${link_name}"
+    # Use the ambassador if that variable is provided
+    if [ -n "${AMBASSADOR}" ]; then
+      export_var "${addr_var}" "${AMBASSADOR}"
+    else
+      export_var "${addr_var}" "${link_name}"
+    fi
   fi
 
   if [ -z "${!port_var}" ]; then
