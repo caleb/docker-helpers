@@ -4,7 +4,7 @@
 # Install runit and monit
 #
 apt-get update
-apt-get install -y monit runit curl socat
+apt-get install -y monit runit curl socat msmtp
 rm -rf /var/lib/apt/lists/*
 
 #
