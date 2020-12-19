@@ -4,7 +4,7 @@
 # Install runit and monit
 #
 apt-get update
-apt-get install -y monit runit curl socat msmtp inotify-tools xz-utils
+apt-get install -y monit runit curl socat msmtp inotify-tools xz-utils gpgv2
 rm -rf /var/lib/apt/lists/*
 
 #
